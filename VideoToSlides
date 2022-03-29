@@ -4,13 +4,14 @@ import img2pdf
 import glob
 import shutil
 from tqdm import tqdm
+import hashlib
 
 def extract_video(video_path, temp_path):
     if os.path.exists(temp_path):
         shutil.rmtree(temp_path)
     os.makedirs(temp_path, exist_ok=True)
 
-    cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
+    cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise Exception(f'unable to open file {video_path}')
 
@@ -65,6 +66,7 @@ def extract_video(video_path, temp_path):
 
 if __name__ == "__main__":
     video_path = ""
-    print(os.path.basename(video_path))
+    sha1gen = hashlib.sha1()
+    sha1gen.update(video_path.encode("utf-8"))
     extract_video(video_path, os.path.join(
-        os.path.dirname(video_path), os.path.basename(video_path) + " pdf temp"))
+        os.path.dirname(video_path), sha1gen.hexdigest()))
