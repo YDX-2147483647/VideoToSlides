@@ -4,6 +4,7 @@ import img2pdf
 import glob
 import shutil
 from tqdm import tqdm
+import numpy as np
 
 
 def extract_video(video_path, temp_path):
@@ -11,27 +12,37 @@ def extract_video(video_path, temp_path):
         shutil.rmtree(temp_path)
     os.makedirs(temp_path, exist_ok=True)
 
-    vs = cv2.VideoCapture(video_path)
-    if not vs.isOpened():
+    cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
+    if not cap.isOpened():
         raise Exception(f'unable to open file {video_path}')
 
     fgbg = cv2.createBackgroundSubtractorMOG2(
-        history=16, varThreshold=16, detectShadows=False)
+        history=4, varThreshold=16, detectShadows=False)
 
     cnt = 0
-    (W, H) = (192, 108)
+    (W, H) = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)/20),
+              int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/20))
     orig = None
-    with tqdm(total=int(vs.get(cv2.CAP_PROP_FRAME_COUNT)), ncols=100) as pbar:
+    frame_cnt = 0
+    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), ncols=100) as pbar:
         while True:
-            ret, frame = vs.read()
+            ret = cap.grab()
             if ret is not True:
                 break
             pbar.update(1)
 
-            frame_resized = cv2.resize(frame, (W, H))
-            mask = fgbg.apply(frame_resized)
+            frame_cnt += 1
+            if frame_cnt % 3 != 0:
+                continue
 
-            p_diff = (cv2.countNonZero(mask) / float(W * H)) * 100
+            ret, frame = cap.retrieve()
+            if ret is not True:
+                break
+
+            frame_resized = cv2.resize(frame, (W, H))
+
+            p_diff = (cv2.countNonZero(fgbg.apply(
+                frame_resized)) / float(W * H)) * 100
 
             if p_diff < 0.1:
                 orig = frame
@@ -39,13 +50,13 @@ def extract_video(video_path, temp_path):
                 cnt += 1
                 cv2.imwrite(os.path.join(temp_path, f"{cnt:03}.png"), orig)
                 orig = None
-    
+
         if orig is not None:
             cnt += 1
             cv2.imwrite(os.path.join(temp_path, f"{cnt:03}.png"), orig)
             orig = None
 
-    vs.release()
+    cap.release()
 
     with open(video_path.replace(".mp4", ".pdf"), "wb") as f:
         f.write(img2pdf.convert(sorted(glob.glob(f"{temp_path}/*.png"))))
@@ -56,5 +67,6 @@ def extract_video(video_path, temp_path):
 
 if __name__ == "__main__":
     video_path = ""
+    print(os.path.basename(video_path))
     extract_video(video_path, os.path.join(
-        os.path.dirname(video_path), "temp"))
+        os.path.dirname(video_path), os.path.basename(video_path) + " pdf temp"))
