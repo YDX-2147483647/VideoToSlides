@@ -4,8 +4,6 @@ import img2pdf
 import glob
 import shutil
 from tqdm import tqdm
-import numpy as np
-
 
 def extract_video(video_path, temp_path):
     if os.path.exists(temp_path):
