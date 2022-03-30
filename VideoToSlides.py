@@ -31,7 +31,7 @@ def extract_video(video_path):
             pbar.update(1)
 
             frame_cnt += 1
-            if frame_cnt % 2 != 0:
+            if frame_cnt % 3 != 0:
                 continue
 
             ret, frame = cap.retrieve()
@@ -67,5 +67,6 @@ def extract_video(video_path):
 if __name__ == "__main__":
     folder_path = ""
     video_list = glob.glob(f"{folder_path}/*.mp4")
+
     for video_path in video_list:
         extract_video(video_path)
