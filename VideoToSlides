@@ -65,5 +65,7 @@ def extract_video(video_path):
 
 
 if __name__ == "__main__":
-    video_path = ""
-    extract_video(video_path)
+    folder_path = ""
+    video_list = glob.glob(f"{folder_path}/*")
+    for video_path in video_list:
+        extract_video(video_path)
