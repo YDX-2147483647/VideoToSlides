@@ -23,7 +23,7 @@ def extract_video(video_path):
               int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/20))
     orig = None
     frame_cnt = 0
-    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), ncols=100) as pbar:
+    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), desc=os.path.basename(video_path), ncols=100) as pbar:
         while True:
             ret = cap.grab()
             if ret is not True:
@@ -65,7 +65,7 @@ def extract_video(video_path):
 
 
 if __name__ == "__main__":
-    folder_path = ""
-    video_list = glob.glob(f"{folder_path}/*")
+    folder_path = "F:\\2021Mathematics\\数学分析I 方丽萍 李保奎"
+    video_list = glob.glob(f"{folder_path}/*vga*.mp4")
     for video_path in video_list:
         extract_video(video_path)
