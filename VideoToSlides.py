@@ -23,7 +23,7 @@ def extract_video(video_path):
               int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/20))
     orig = None
     frame_cnt = 0
-    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), desc=os.path.basename(video_path), ncols=50) as pbar:
+    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), desc=os.path.basename(video_path), ncols=100) as pbar:
         while True:
             ret = cap.grab()
             if ret is not True:
@@ -31,7 +31,7 @@ def extract_video(video_path):
             pbar.update(1)
 
             frame_cnt += 1
-            if frame_cnt % 3 != 0:
+            if frame_cnt % 2 != 0:
                 continue
 
             ret, frame = cap.retrieve()
@@ -43,7 +43,7 @@ def extract_video(video_path):
             p_diff = (cv2.countNonZero(fgbg.apply(
                 frame_resized)) / float(W * H)) * 100
 
-            if p_diff < 0.1:
+            if p_diff < 0.2:
                 orig = frame
             elif p_diff > 3 and orig is not None:
                 cnt += 1
