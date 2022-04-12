@@ -3,7 +3,7 @@ import cv2
 import img2pdf
 import glob
 import shutil
-from tqdm import tqdm
+import multiprocessing
 
 def extract_video(video_path):
     cap = cv2.VideoCapture(video_path)
@@ -23,37 +23,35 @@ def extract_video(video_path):
               int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)/20))
     orig = None
     frame_cnt = 0
-    with tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), desc=os.path.basename(video_path), ncols=100) as pbar:
-        while True:
-            ret = cap.grab()
-            if ret is not True:
-                break
-            pbar.update(1)
+    while True:
+        ret = cap.grab()
+        if ret is not True:
+            break
 
-            frame_cnt += 1
-            if frame_cnt % 3 != 0:
-                continue
+        frame_cnt += 1
+        if frame_cnt % 3 != 0:
+            continue
 
-            ret, frame = cap.retrieve()
-            if ret is not True:
-                break
+        ret, frame = cap.retrieve()
+        if ret is not True:
+            break
 
-            frame_resized = cv2.resize(frame, (W, H))
+        frame_resized = cv2.resize(frame, (W, H))
 
-            p_diff = (cv2.countNonZero(fgbg.apply(
-                frame_resized)) / float(W * H)) * 100
+        p_diff = (cv2.countNonZero(fgbg.apply(
+            frame_resized)) / float(W * H)) * 100
 
-            if p_diff < 0.2:
-                orig = frame
-            elif p_diff > 3 and orig is not None:
-                cnt += 1
-                cv2.imencode('.png', orig)[1].tofile(os.path.join(temp_path, f"{cnt:03}.png"))
-                orig = None
-
-        if orig is not None:
+        if p_diff < 0.2:
+            orig = frame
+        elif p_diff > 2 and orig is not None:
             cnt += 1
             cv2.imencode('.png', orig)[1].tofile(os.path.join(temp_path, f"{cnt:03}.png"))
             orig = None
+
+    if orig is not None:
+        cnt += 1
+        cv2.imencode('.png', orig)[1].tofile(os.path.join(temp_path, f"{cnt:03}.png"))
+        orig = None
 
     cap.release()
 
@@ -61,12 +59,17 @@ def extract_video(video_path):
         f.write(img2pdf.convert(sorted(glob.glob(f"{temp_path}/*.png"))))
     shutil.rmtree(temp_path)
 
+    os.remove(video_path)
+    print(f'[SUCCESS] File: {video_path}')
+
     return
 
-
 if __name__ == "__main__":
-    folder_path = ""
-    video_list = glob.glob(f"{folder_path}/*.mp4")
+    folder_path = "./videos"
+    video_list = glob.glob(f"{folder_path}/*vga*.mp4")
 
-    for video_path in video_list:
-        extract_video(video_path)
+    with multiprocessing.Pool(8) as pool:
+        pool.map(extract_video, video_list)
+
+    # for video_path in video_list:
+    #     extract_video(video_path)
