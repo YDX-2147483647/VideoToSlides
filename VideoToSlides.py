@@ -43,7 +43,7 @@ def extract_video(video_path):
 
         if p_diff < 0.2:
             orig = frame
-        elif p_diff > 2 and orig is not None:
+        elif p_diff > 2.4 and orig is not None:
             cnt += 1
             cv2.imencode('.png', orig)[1].tofile(os.path.join(temp_path, f"{cnt:03}.png"))
             orig = None
